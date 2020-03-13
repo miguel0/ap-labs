@@ -121,16 +121,20 @@ func main() {
 	}
 	path := make(Path, sides)
 
+	k := 0
 	for i := 0; i < sides; i++ {
+		if k > 1000 {
+			i = 0
+			k = 0
+			continue
+		}
+
 		path[i] = Point{-100 + rand.Float64()*200, -100 + rand.Float64()*200}
 		if i > 2 {
 			for j := 0; j+2 < i; j++ {
-				if doIntersect(path[j], path[j+1], path[i-1], path[i]) {
+				if (doIntersect(path[j], path[j+1], path[i-1], path[i])) || (i == len(path)-1 && j != 0 && doIntersect(path[j], path[j+1], path[i], path[0])) {
 					i--
-					break
-				}
-				if i == len(path)-1 && j != 0 && doIntersect(path[j], path[j+1], path[i], path[0]) {
-					i--
+					k++
 					break
 				}
 			}
