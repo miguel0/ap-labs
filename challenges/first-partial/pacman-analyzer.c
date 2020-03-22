@@ -296,7 +296,7 @@ void myWrite(char *toWrite, int file) {
 
         err = lseek(file, 1, SEEK_SET);
         if(err < 0) {
-            printf("Unable to write file.\n");
+            printf("Unable to seek file.\n");
             exit(1);
         }
 
