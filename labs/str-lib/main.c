@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     printf("Initial Lenght      : %d\n", mystrlen(argv[1]));
     printf("New String          : %s\n", concat);
     if(find == -1) {
-        printf("SubString was found : no\n");
+        printf("SubString was found : not found\n");
     } else {
         printf("SubString was found : yes, on index %d\n", find);
     }
