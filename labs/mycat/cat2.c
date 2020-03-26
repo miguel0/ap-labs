@@ -1,9 +1,11 @@
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 int myRead(int file);
 void myWrite(int c, int file);
+void myWriteStr(char *str, int file);
 
 /* filecopy:  copy file ifp to file ofp */
 void filecopy(int ifp, int ofp)
@@ -26,7 +28,11 @@ int main(int argc, char *argv[])
     else
         while (--argc > 0)
             if ((fp = open(*++argv, O_RDONLY, 0600)) < 0) {
-                fprintf(stderr, "%s: can′t open %s\n", prog, *argv);
+                myWriteStr(prog, fileno(stderr));
+                myWriteStr(": can′t open ", fileno(stderr));
+                myWriteStr(*argv, fileno(stderr));
+                myWriteStr("\n", fileno(stderr));
+                // fprintf(stderr, "%s: can′t open %s\n", prog, *argv);
                 return 1;
             } else {
                 filecopy(fp, fileno(stdout));
@@ -34,7 +40,9 @@ int main(int argc, char *argv[])
             }
 
     if (ferror(stdout)) {
-        fprintf(stderr, "%s: error writing stdout\n", prog);
+        myWriteStr(prog, fileno(stderr));
+        myWriteStr(": error writing stdout\n", fileno(stderr));
+        // fprintf(stderr, "%s: error writing stdout\n", prog);
         return 2;
     }
 
@@ -55,4 +63,11 @@ int myRead(int file)
 void myWrite(int c, int file)
 {
     write(file, &c, 1);
+}
+
+void myWriteStr(char *str, int file)
+{
+    for(int i = 0; i < strlen(str); i++) {
+        myWrite((int) str[i], file);
+    }
 }
