@@ -1,0 +1,10 @@
+For comparing both programs, 2 files were created with useless text.
+
+time cat hola.txt adios.txt
+The execution time of the regular cat is 0.005s
+
+time ./a.out hola.txt adios.txt
+The execution time of my cat is 0.167s
+
+The regular cat is faster by 0.162s or 33.4 times faster.
+My cat reads and writes one character at a time, this is probably the reson why it's slower.
