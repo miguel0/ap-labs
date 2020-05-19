@@ -13,6 +13,16 @@ General Requirements and Considerations
 - Don't forget to handle errors properly.
 - Coding best practices implementation will be also considered.
 
+How to use the 94.go
+--------------------
+- go run 94.go <number of goroutiens to generate>
+- If you pass no argument, the program will generate goroutines until your memory fills up and the program crashes. YOUR COMPUTER WILL SLOW DOWN IF YOU DO THIS.
+
+How to use the 95.go
+--------------------
+- go run 95.go <number of messages to send>
+- If you pass no argument, the program will send messages until it receives an interrupt signal, Ctrl + C.
+
 
 How to submit your work
 =======================
