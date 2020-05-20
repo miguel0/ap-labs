@@ -13,12 +13,17 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
-	"os"
 
 	"gopl.io/ch5/links"
 )
+
+type urlDepth struct {
+	urls  []string
+	depth int
+}
 
 //!+sema
 // tokens is a counting semaphore used to
@@ -41,23 +46,34 @@ func crawl(url string) []string {
 
 //!+
 func main() {
-	worklist := make(chan []string)
+	depthp := flag.Int("depth", -1, "web crawler depth")
+	flag.Parse()
+	url := flag.Args()
+	depth := *depthp + 1
+
+	if len(url) == 0 {
+		fmt.Println("You must specify an URL.")
+		return
+	}
+
+	worklist := make(chan urlDepth)
 	var n int // number of pending sends to worklist
 
 	// Start with the command-line arguments.
 	n++
-	go func() { worklist <- os.Args[1:] }()
+	go func() { worklist <- urlDepth{urls: url, depth: depth} }()
 
 	// Crawl the web concurrently.
 	seen := make(map[string]bool)
 	for ; n > 0; n-- {
 		list := <-worklist
-		for _, link := range list {
-			if !seen[link] {
+
+		for _, link := range list.urls {
+			if !seen[link] && list.depth != 0 {
 				seen[link] = true
 				n++
 				go func(link string) {
-					worklist <- crawl(link)
+					worklist <- urlDepth{urls: crawl(link), depth: list.depth - 1}
 				}(link)
 			}
 		}
