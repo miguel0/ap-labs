@@ -22,49 +22,12 @@
 
 int fd;
 
-void add_watches(int fd, char *root)
+int add_dir(const char *fpath, const struct stat *sb, int typeflag)
 {
-    int wd;
-    char *abs_dir;
-    struct dirent *entry;
-    DIR *dp;
-
-    dp = opendir(root);
-    if (dp == NULL) {
-        errorf("Error opening the starting directory\n");
-        exit(0);
+    if(typeflag == FTW_D) {
+        inotify_add_watch(fd, fpath, IN_CREATE | IN_MOVED_FROM | IN_DELETE);
     }
-
-    wd = inotify_add_watch(fd, root, IN_CREATE | IN_MOVED_FROM | IN_DELETE);
-    if (wd == -1) {
-        errorf("Couldn't add watch to %s\n",root);
-    }
-    else {
-        infof("Watching:: %s\n",root);
-    }
-
-    abs_dir = (char *)malloc(MAX_LEN);
-    while((entry = readdir(dp))) {
-        if (entry->d_type == 4)
-        {
-            strcpy(abs_dir,root);
-            strcat(abs_dir,entry->d_name);
-            
-            wd = inotify_add_watch(fd, abs_dir, IN_CREATE | IN_MOVED_FROM | IN_DELETE);
-            if (wd == -1)
-                infof("Couldn't add watch to the directory %s\n",abs_dir);
-            else
-                infof("Watching:: %s\n",abs_dir);
-        }
-    }
-
-    closedir(dp);
-    free(abs_dir);
-}
-
-int add_dir(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
-{
-    return inotify_add_watch(fd, fpath, IN_CREATE | IN_MOVED_FROM | IN_DELETE);
+    return 0;
 }
 
 int main(int argc, char **argv)
@@ -81,7 +44,7 @@ int main(int argc, char **argv)
         case 2:
             strcpy(root,argv[1]);
             if(root[strlen(root)-1]!='/')
-            strcat(root,"/");
+                strcat(root,"/");
             puts(root);
             break;
             
@@ -95,28 +58,25 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    add_watches(fd, root);
+    ftw(root, add_dir, 64);
 
     while(1)
     {
         i = 0;
-        length = read(fd, buffer, BUF_LEN);  
+        length = read(fd, buffer, BUF_LEN);
 
         if (length < 0) {
-            errorf("read\n");
+            errorf("Read error.\n");
             exit(1);
         }  
 
         while (i < length) {
-            struct inotify_event *event = (struct inotify_event *) &buffer[i];
+            struct inotify_event *event = (struct inotify_event *) buffer;
             if (event->len) {
                 if (event->mask & IN_CREATE) {
                     if (event->mask & IN_ISDIR) {
                         infof("DIR: %s CREATED\n", event->name);
-                        if (nftw(root, add_dir, 64, FTW_PHYS) == -1) {
-                            errorf("Couldn't add watch to %s\n", event->name);
-                            exit(1);
-                        }
+                        ftw(root, add_dir, 64);
                     }
                     else
                         infof("FILE: %s CREATED\n", event->name);
@@ -135,9 +95,8 @@ int main(int argc, char **argv)
                     else
                         infof("FILE: %s DELETED\n", event->name);
                 }
-
-                i += EVENT_SIZE + event->len;
             }
+            i += EVENT_SIZE + event->len;
         }
     }
 
