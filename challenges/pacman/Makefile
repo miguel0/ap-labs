@@ -5,3 +5,5 @@ all:
 	go build
 clean:
 	rm pacman
+submit:
+	include ../../common.mk
